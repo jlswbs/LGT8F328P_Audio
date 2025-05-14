@@ -1,4 +1,4 @@
-// Fuzz-Strong filter and fuzz distortion //
+// Bass-Strong filter //
 
 #define LED_PIN     13
 #define LED_PORT    PORTB
@@ -12,26 +12,18 @@
   int out = 0;
   int last = 0;
   int curr = 0;
-  int8_t delaymem[SIZE];
+  uint8_t delaymem[SIZE];
   uint8_t locat = 0;
   uint8_t bound = SIZE;
   int accum = 0;
   int lowpass = 0;
 
-int8_t fuzz(int8_t x, uint8_t clip, uint8_t gain) {
-  
-  float y = x * gain;            
-  if(y > clip) y = clip;
-  else if(y < -clip) y = -clip;
-  return y;
-
-}
    
 ISR(TIMER1_COMPA_vect) {
 
-  DALR = 128 + out;
+  DALR = out;
   
-  delaymem[locat++] = fuzz(-out, 100, 80);
+  delaymem[locat++] = -out;
   if (locat >= bound) locat = 0;
   curr = delaymem[locat];
   out = accum >> lowpass;
@@ -63,10 +55,10 @@ void loop() {
     
   LED_PORT ^= 1 << LED_BIT;
   
-  for (int i = 0; i < SIZE; i++) delaymem[i] = random(-127, 127);
+  for (int i = 0; i < SIZE; i++) delaymem[i] = rand() % i;
   
   bound = random(OFFSET, SIZE);
-  lowpass = random(0, 4);
+  lowpass = random(1, 4);
    
   int tempo = 60000 / BPM;
   delay(tempo / 2);
