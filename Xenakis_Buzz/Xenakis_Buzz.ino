@@ -33,13 +33,14 @@ void buzz (int gainVari, float durVari, float dutyVari) {
     DALR = gain;
     state = 1;
     usec += dur  * duty;
-    LED_PORT ^= 1 << LED_BIT;
+    digitalWrite(LED_PIN, HIGH);
 
   } else {
 
     DALR = 0;
     state = 0;
     usec += dur * (1.0f - duty);
+    digitalWrite(LED_PIN, LOW);
 
   }
 
