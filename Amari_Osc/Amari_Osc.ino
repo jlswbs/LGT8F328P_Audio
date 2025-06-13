@@ -1,10 +1,9 @@
-// Amari neuron - chemical oscillation //
-
-#include "oscillator.h"
+// Amari neural field model oscillation //
 
 #define LED_PIN     13
 #define LED_PORT    PORTB
 #define LED_BIT     5
+#define SAMPLE_RATE 44100
 
   float u = 0.0f;
   float s_u = 0.0f;
@@ -19,25 +18,12 @@
   float c_uv = -1.5f;
   float c_vu = 1.5f;
   float beta = 20.0f;
-  float dt = 0.005f;
+  float dt = 0.1f;
   float c_n = 0.1f;
 
 float sigmoid(float x, float beta) { return 1.0f / (1.0f + expf(-x * beta)); }
 
-
-void setup() {
-
-  pinMode(LED_PIN, OUTPUT);
-
-  analogReference(DEFAULT);
-  pinMode(DAC0, ANALOG);
-
-  oscillator::initOSC();
-  oscillator::setOSCFrequency(100);
-
-}
-
-void loop() {
+ISR(TIMER1_COMPA_vect) {
 
   float noise = 1.0f / 1000.0f * random(1000) - 0.5f;
 
@@ -46,7 +32,32 @@ void loop() {
   
   d_v = dt * (-v + s_v + h_v + c_vv * sigmoid(v, beta) + c_vu * sigmoid(u, beta));
   v = v + d_v;
-   
-  oscillator::setOSCFrequency(1000 + 440.0f * u);
+
+  if(u  > 0.5f) LED_PORT ^= 1 << LED_BIT;
+
+  DALR = 90 + (180.0f * u);
+
+}
+
+void setup() {
+
+  pinMode(LED_PIN, OUTPUT);
+
+  analogReference(DEFAULT);
+  pinMode(DAC0, ANALOG);
+
+  cli();
+
+  TCCR1B = (TCCR1B & ~_BV(WGM13)) | _BV(WGM12);
+  TCCR1A = TCCR1A & ~(_BV(WGM11) | _BV(WGM10));
+  TCCR1B = (TCCR1B & ~(_BV(CS12) | _BV(CS11))) | _BV(CS10);
+  OCR1A = F_CPU / SAMPLE_RATE;
+  TIMSK1 |= _BV(OCIE1A);
+
+  sei();
+
+}
+
+void loop() {
 
 }
