@@ -39,8 +39,7 @@ ISR(TIMER1_COMPA_vect) {
   y[2] = y[1];
   y[1] = y[0];
 
-  int out = 128 + (y[ 0 ] >> 8);
-  DALR = grain(out);
+  DALR = grain(128 + (y[ 0 ] >> 8));
 
 }
 
